@@ -1,0 +1,36 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# Node / React
+node_modules/
+dist/
+build/
+.vite/
+
+# IDE / editor
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Database backups
+*.sql.bak
+aero_blood_full_backup.sql
+
+# Local temporary files
+*.tmp
+*.temp
