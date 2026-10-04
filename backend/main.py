@@ -1,7 +1,8 @@
-﻿from fastapi import FastAPI
-from sqlalchemy import text
+﻿from fastapi import Depends, FastAPI
+from sqlalchemy.orm import Session
 
-from database import engine
+from database import get_db
+from models import Donor
 
 app = FastAPI(title="AERO-BLOOD API")
 
@@ -15,9 +16,21 @@ def root():
 
 @app.get("/db-test")
 def database_test():
-    with engine.connect() as connection:
-        result = connection.execute(text("SELECT 1"))
+    db = next(get_db())
+    try:
+        result = db.execute(__import__("sqlalchemy").text("SELECT 1"))
         return {
             "database": "connected",
             "result": result.scalar(),
         }
+    finally:
+        db.close()
+
+
+@app.get("/donors")
+def get_donors(
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+):
+    return db.query(Donor).offset(offset).limit(limit).all()
