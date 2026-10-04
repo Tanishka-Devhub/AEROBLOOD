@@ -33,6 +33,7 @@ def get_donors(
     offset: int = 0,
     blood_group_id: int | None = None,
     status: str | None = None,
+    name: str | None = None,
     db: Session = Depends(get_db),
 ):
     query = db.query(Donor)
@@ -42,5 +43,8 @@ def get_donors(
 
     if status is not None:
         query = query.filter(Donor.status == status)
+
+    if name is not None:
+        query = query.filter(Donor.full_name.ilike(f"%{name}%"))
 
     return query.offset(offset).limit(limit).all()
