@@ -31,6 +31,16 @@ def database_test():
 def get_donors(
     limit: int = 50,
     offset: int = 0,
+    blood_group_id: int | None = None,
+    status: str | None = None,
     db: Session = Depends(get_db),
 ):
-    return db.query(Donor).offset(offset).limit(limit).all()
+    query = db.query(Donor)
+
+    if blood_group_id is not None:
+        query = query.filter(Donor.blood_group_id == blood_group_id)
+
+    if status is not None:
+        query = query.filter(Donor.status == status)
+
+    return query.offset(offset).limit(limit).all()
