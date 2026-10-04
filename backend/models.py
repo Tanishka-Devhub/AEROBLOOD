@@ -26,3 +26,20 @@ class Donor(Base):
     address: Mapped[str | None] = mapped_column(String(255))
     registration_date: Mapped[date] = mapped_column(Date, nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False)
+
+
+class BloodGroup(Base):
+    __tablename__ = "bloodgroup"
+
+    blood_group_id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+
+    group_name: Mapped[str] = mapped_column(
+    String(3),
+    nullable=False,
+    unique=True,
+)
+    
