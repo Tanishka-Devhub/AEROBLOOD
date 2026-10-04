@@ -48,3 +48,12 @@ def get_donors(
         query = query.filter(Donor.full_name.ilike(f"%{name}%"))
 
     return query.offset(offset).limit(limit).all()
+
+@app.get("/donors/{donor_id}")
+def get_donor(donor_id: int, db: Session = Depends(get_db)):
+    donor = db.query(Donor).filter(Donor.donor_id == donor_id).first()
+
+    if donor is None:
+        return {"error": "Donor not found"}
+
+    return donor
