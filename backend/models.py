@@ -243,3 +243,51 @@ class Hospital(Base):
         String(20),
         nullable=False,
     )
+
+
+class HospitalStaff(Base):
+    __tablename__ = "hospitalstaff"
+
+    staff_id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+
+    hospital_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("hospital.hospital_id"),
+        nullable=False,
+    )
+
+    full_name: Mapped[str] = mapped_column(
+        String(150),
+        nullable=False,
+    )
+
+    role: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+    )
+
+    license_or_employee_id: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        unique=True,
+    )
+
+    phone: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+    )
+
+    email: Mapped[str | None] = mapped_column(
+        String(150),
+        nullable=True,
+        unique=True,
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+    )

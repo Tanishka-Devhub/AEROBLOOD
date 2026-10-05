@@ -4,7 +4,15 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
-from models import BloodBank, BloodGroup, BloodUnit, Donation, Donor, Hospital
+from models import (
+    BloodBank,
+    BloodGroup,
+    BloodUnit,
+    Donation,
+    Donor,
+    Hospital,
+    HospitalStaff,
+)
 from schemas import (
     BloodBankCreate,
     BloodBankResponse,
@@ -20,6 +28,8 @@ from schemas import (
     DonorUpdate,
     HospitalCreate,
     HospitalResponse,
+    HospitalStaffCreate,
+    HospitalStaffResponse,
 )
 
 app = FastAPI(title="AERO-BLOOD API")
@@ -646,3 +656,112 @@ def create_hospital(
     db.refresh(hospital)
 
     return hospital
+
+
+@app.get("/hospital-staff", response_model=list[HospitalStaffResponse])
+def get_hospital_staff(
+    hospital_id: int | None = None,
+    role: str | None = None,
+    status: str | None = None,
+    name: str | None = None,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = db.query(HospitalStaff)
+
+    if hospital_id is not None:
+        query = query.filter(HospitalStaff.hospital_id == hospital_id)
+
+    if role is not None:
+        query = query.filter(
+            HospitalStaff.role == role.strip().upper()
+        )
+
+    if status is not None:
+        query = query.filter(
+            HospitalStaff.status == status.strip().upper()
+        )
+
+    if name is not None:
+        query = query.filter(HospitalStaff.full_name.ilike(f"%{name}%"))
+
+    return (
+        query
+        .order_by(HospitalStaff.staff_id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+@app.get("/hospital-staff/{staff_id}", response_model=HospitalStaffResponse)
+def get_single_hospital_staff(
+    staff_id: int,
+    db: Session = Depends(get_db),
+):
+    staff = (
+        db.query(HospitalStaff)
+        .filter(HospitalStaff.staff_id == staff_id)
+        .first()
+    )
+
+    if staff is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Hospital staff not found",
+        )
+
+    return staff
+
+
+@app.post("/hospital-staff", response_model=HospitalStaffResponse, status_code=201)
+def create_hospital_staff(
+    staff_data: HospitalStaffCreate,
+    db: Session = Depends(get_db),
+):
+    hospital = (
+        db.query(Hospital)
+        .filter(Hospital.hospital_id == staff_data.hospital_id)
+        .first()
+    )
+    if hospital is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Hospital not found",
+        )
+
+    existing_license = (
+        db.query(HospitalStaff)
+        .filter(HospitalStaff.license_or_employee_id == staff_data.license_or_employee_id)
+        .first()
+    )
+    if existing_license is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="Hospital staff with this license or employee ID already exists",
+        )
+
+    if staff_data.email is not None:
+        existing_email = (
+            db.query(HospitalStaff)
+            .filter(HospitalStaff.email == staff_data.email)
+            .first()
+        )
+        if existing_email is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="Hospital staff with this email already exists",
+            )
+
+    staff_dict = staff_data.model_dump()
+    staff_dict["role"] = staff_data.role.value
+    staff_dict["status"] = staff_data.status.value
+
+    staff = HospitalStaff(**staff_dict)
+
+    db.add(staff)
+    db.commit()
+    db.refresh(staff)
+
+    return staff

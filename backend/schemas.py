@@ -219,3 +219,53 @@ class HospitalCreate(BaseModel):
         if isinstance(v, str):
             return v.strip().upper()
         return v
+
+
+class StaffRole(StrEnum):
+    DOCTOR = "DOCTOR"
+    NURSE = "NURSE"
+    COORDINATOR = "COORDINATOR"
+    LAB_STAFF = "LAB_STAFF"
+    BLOOD_BANK_STAFF = "BLOOD_BANK_STAFF"
+    ADMIN = "ADMIN"
+
+
+class StaffStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    SUSPENDED = "SUSPENDED"
+
+
+class HospitalStaffResponse(BaseModel):
+    staff_id: int
+    hospital_id: int
+    full_name: str
+    role: StaffRole
+    license_or_employee_id: str
+    phone: str
+    email: str | None = None
+    status: StaffStatus
+
+
+class HospitalStaffCreate(BaseModel):
+    hospital_id: int
+    full_name: str
+    role: StaffRole
+    license_or_employee_id: str
+    phone: str
+    email: str | None = None
+    status: StaffStatus = StaffStatus.ACTIVE
+
+    @field_validator("role", mode="before")
+    @classmethod
+    def normalize_role(cls, v: str | StaffRole) -> str | StaffRole:
+        if isinstance(v, str):
+            return v.strip().upper()
+        return v
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalize_status(cls, v: str | StaffStatus) -> str | StaffStatus:
+        if isinstance(v, str):
+            return v.strip().upper()
+        return v
