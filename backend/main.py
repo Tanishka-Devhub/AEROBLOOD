@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
 from models import (
+    Allocation,
     BloodBank,
     BloodGroup,
     BloodRequest,
@@ -15,6 +16,8 @@ from models import (
     HospitalStaff,
 )
 from schemas import (
+    AllocationCreate,
+    AllocationResponse,
     BloodBankCreate,
     BloodBankResponse,
     BloodGroupResponse,
@@ -913,4 +916,129 @@ def create_blood_request(
     db.refresh(blood_request)
 
     return blood_request
+
+
+@app.get("/allocations", response_model=list[AllocationResponse])
+def get_allocations(
+    request_id: int | None = None,
+    unit_id: int | None = None,
+    source_blood_bank_id: int | None = None,
+    allocated_by_staff_id: int | None = None,
+    status: str | None = None,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = db.query(Allocation)
+
+    if request_id is not None:
+        query = query.filter(Allocation.request_id == request_id)
+
+    if unit_id is not None:
+        query = query.filter(Allocation.unit_id == unit_id)
+
+    if source_blood_bank_id is not None:
+        query = query.filter(
+            Allocation.source_blood_bank_id == source_blood_bank_id
+        )
+
+    if allocated_by_staff_id is not None:
+        query = query.filter(
+            Allocation.allocated_by_staff_id == allocated_by_staff_id
+        )
+
+    if status is not None:
+        query = query.filter(
+            Allocation.status == status.strip().upper()
+        )
+
+    return (
+        query
+        .order_by(Allocation.allocation_id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+@app.get("/allocations/{allocation_id}", response_model=AllocationResponse)
+def get_allocation(
+    allocation_id: int,
+    db: Session = Depends(get_db),
+):
+    allocation = (
+        db.query(Allocation)
+        .filter(Allocation.allocation_id == allocation_id)
+        .first()
+    )
+
+    if allocation is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Allocation not found",
+        )
+
+    return allocation
+
+
+@app.post("/allocations", response_model=AllocationResponse, status_code=201)
+def create_allocation(
+    allocation_data: AllocationCreate,
+    db: Session = Depends(get_db),
+):
+    blood_request = (
+        db.query(BloodRequest)
+        .filter(BloodRequest.request_id == allocation_data.request_id)
+        .first()
+    )
+    if blood_request is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Blood request not found",
+        )
+
+    blood_unit = (
+        db.query(BloodUnit)
+        .filter(BloodUnit.unit_id == allocation_data.unit_id)
+        .first()
+    )
+    if blood_unit is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Blood unit not found",
+        )
+
+    blood_bank = (
+        db.query(BloodBank)
+        .filter(BloodBank.blood_bank_id == allocation_data.source_blood_bank_id)
+        .first()
+    )
+    if blood_bank is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Blood bank not found",
+        )
+
+    staff = (
+        db.query(HospitalStaff)
+        .filter(HospitalStaff.staff_id == allocation_data.allocated_by_staff_id)
+        .first()
+    )
+    if staff is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Hospital staff not found",
+        )
+
+    allocation_dict = allocation_data.model_dump()
+    allocation_dict["status"] = allocation_data.status.value
+
+    allocation = Allocation(**allocation_dict)
+
+    db.add(allocation)
+    db.commit()
+    db.refresh(allocation)
+
+    return allocation
+
 

@@ -366,4 +366,50 @@ class BloodRequest(Base):
         String(30),
         nullable=False,
     )
+
+
+class Allocation(Base):
+    __tablename__ = "allocation"
+
+    allocation_id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+
+    request_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("bloodrequest.request_id"),
+        nullable=False,
+    )
+
+    unit_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("bloodunit.unit_id"),
+        nullable=False,
+    )
+
+    source_blood_bank_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("bloodbank.blood_bank_id"),
+        nullable=False,
+    )
+
+    allocated_by_staff_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("hospitalstaff.staff_id"),
+        nullable=False,
+    )
+
+    allocated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=func.current_timestamp(),
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+    )
+
 
