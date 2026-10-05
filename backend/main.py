@@ -7,6 +7,7 @@ from database import get_db
 from models import (
     BloodBank,
     BloodGroup,
+    BloodRequest,
     BloodUnit,
     Donation,
     Donor,
@@ -17,6 +18,8 @@ from schemas import (
     BloodBankCreate,
     BloodBankResponse,
     BloodGroupResponse,
+    BloodRequestCreate,
+    BloodRequestResponse,
     BloodUnitCreate,
     BloodUnitResponse,
     BloodUnitStatusUpdate,
@@ -764,4 +767,150 @@ def create_hospital_staff(
     db.commit()
     db.refresh(staff)
 
-    return staff
+    return staff
+
+
+@app.get("/blood-requests", response_model=list[BloodRequestResponse])
+def get_blood_requests(
+    hospital_id: int | None = None,
+    blood_group_id: int | None = None,
+    requested_by_staff_id: int | None = None,
+    attending_doctor_id: int | None = None,
+    doctor_approval_status: str | None = None,
+    priority: str | None = None,
+    status: str | None = None,
+    patient_reference: str | None = None,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = db.query(BloodRequest)
+
+    if hospital_id is not None:
+        query = query.filter(BloodRequest.hospital_id == hospital_id)
+
+    if blood_group_id is not None:
+        query = query.filter(BloodRequest.blood_group_id == blood_group_id)
+
+    if requested_by_staff_id is not None:
+        query = query.filter(
+            BloodRequest.requested_by_staff_id == requested_by_staff_id
+        )
+
+    if attending_doctor_id is not None:
+        query = query.filter(
+            BloodRequest.attending_doctor_id == attending_doctor_id
+        )
+
+    if doctor_approval_status is not None:
+        query = query.filter(
+            BloodRequest.doctor_approval_status
+            == doctor_approval_status.strip().upper()
+        )
+
+    if priority is not None:
+        query = query.filter(
+            BloodRequest.priority == priority.strip().upper()
+        )
+
+    if status is not None:
+        query = query.filter(
+            BloodRequest.status == status.strip().upper()
+        )
+
+    if patient_reference is not None:
+        query = query.filter(
+            BloodRequest.patient_reference.ilike(f"%{patient_reference}%")
+        )
+
+    return (
+        query
+        .order_by(BloodRequest.request_id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+@app.get("/blood-requests/{request_id}", response_model=BloodRequestResponse)
+def get_blood_request(
+    request_id: int,
+    db: Session = Depends(get_db),
+):
+    blood_request = (
+        db.query(BloodRequest)
+        .filter(BloodRequest.request_id == request_id)
+        .first()
+    )
+
+    if blood_request is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Blood request not found",
+        )
+
+    return blood_request
+
+
+@app.post("/blood-requests", response_model=BloodRequestResponse, status_code=201)
+def create_blood_request(
+    request_data: BloodRequestCreate,
+    db: Session = Depends(get_db),
+):
+    hospital = (
+        db.query(Hospital)
+        .filter(Hospital.hospital_id == request_data.hospital_id)
+        .first()
+    )
+    if hospital is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Hospital not found",
+        )
+
+    blood_group = (
+        db.query(BloodGroup)
+        .filter(BloodGroup.blood_group_id == request_data.blood_group_id)
+        .first()
+    )
+    if blood_group is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Blood group not found",
+        )
+
+    requested_by_staff = (
+        db.query(HospitalStaff)
+        .filter(HospitalStaff.staff_id == request_data.requested_by_staff_id)
+        .first()
+    )
+    if requested_by_staff is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Requesting hospital staff not found",
+        )
+
+    attending_doctor = (
+        db.query(HospitalStaff)
+        .filter(HospitalStaff.staff_id == request_data.attending_doctor_id)
+        .first()
+    )
+    if attending_doctor is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Attending doctor not found",
+        )
+
+    request_dict = request_data.model_dump()
+    request_dict["doctor_approval_status"] = request_data.doctor_approval_status.value
+    request_dict["priority"] = request_data.priority.value
+    request_dict["status"] = request_data.status.value
+
+    blood_request = BloodRequest(**request_dict)
+
+    db.add(blood_request)
+    db.commit()
+    db.refresh(blood_request)
+
+    return blood_request
+

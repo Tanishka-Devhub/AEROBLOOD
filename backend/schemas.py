@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
@@ -268,4 +268,96 @@ class HospitalStaffCreate(BaseModel):
     def normalize_status(cls, v: str | StaffStatus) -> str | StaffStatus:
         if isinstance(v, str):
             return v.strip().upper()
-        return v
+        return v
+
+
+class DoctorApprovalStatus(StrEnum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
+class BloodRequestPriority(StrEnum):
+    NORMAL = "NORMAL"
+    URGENT = "URGENT"
+    EMERGENCY = "EMERGENCY"
+
+
+class BloodRequestStatus(StrEnum):
+    PENDING = "PENDING"
+    PARTIALLY_ALLOCATED = "PARTIALLY_ALLOCATED"
+    FULFILLED = "FULFILLED"
+    CANCELLED = "CANCELLED"
+    EXPIRED = "EXPIRED"
+
+
+class BloodRequestResponse(BaseModel):
+    request_id: int
+    hospital_id: int
+    patient_reference: str
+    blood_group_id: int
+    quantity_required: int
+    requested_by_staff_id: int
+    attending_doctor_id: int
+    doctor_approval_status: DoctorApprovalStatus
+    doctor_approved_at: datetime | None = None
+    request_date: datetime
+    required_by: datetime
+    priority: BloodRequestPriority
+    status: BloodRequestStatus
+
+
+class BloodRequestCreate(BaseModel):
+    hospital_id: int
+    patient_reference: str
+    blood_group_id: int
+    quantity_required: int
+    requested_by_staff_id: int
+    attending_doctor_id: int
+    doctor_approval_status: DoctorApprovalStatus = DoctorApprovalStatus.PENDING
+    doctor_approved_at: datetime | None = None
+    required_by: datetime
+    priority: BloodRequestPriority = BloodRequestPriority.NORMAL
+    status: BloodRequestStatus = BloodRequestStatus.PENDING
+
+    @field_validator("quantity_required")
+    @classmethod
+    def validate_quantity_required(cls, v: int) -> int:
+        if v <= 0:
+            raise ValueError("quantity_required must be greater than 0")
+        return v
+
+    @field_validator("patient_reference")
+    @classmethod
+    def validate_patient_reference(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("patient_reference must not be blank")
+        return v.strip()
+
+    @field_validator("doctor_approval_status", mode="before")
+    @classmethod
+    def normalize_doctor_approval_status(
+        cls, v: str | DoctorApprovalStatus
+    ) -> str | DoctorApprovalStatus:
+        if isinstance(v, str):
+            return v.strip().upper()
+        return v
+
+    @field_validator("priority", mode="before")
+    @classmethod
+    def normalize_priority(
+        cls, v: str | BloodRequestPriority
+    ) -> str | BloodRequestPriority:
+        if isinstance(v, str):
+            return v.strip().upper()
+        return v
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalize_status(
+        cls, v: str | BloodRequestStatus
+    ) -> str | BloodRequestStatus:
+        if isinstance(v, str):
+            return v.strip().upper()
+        return v
+

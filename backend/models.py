@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
@@ -290,4 +290,80 @@ class HospitalStaff(Base):
     status: Mapped[str] = mapped_column(
         String(20),
         nullable=False,
-    )
+    )
+
+
+class BloodRequest(Base):
+    __tablename__ = "bloodrequest"
+
+    request_id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+
+    hospital_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("hospital.hospital_id"),
+        nullable=False,
+    )
+
+    patient_reference: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+    )
+
+    blood_group_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("bloodgroup.blood_group_id"),
+        nullable=False,
+    )
+
+    quantity_required: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+    )
+
+    requested_by_staff_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("hospitalstaff.staff_id"),
+        nullable=False,
+    )
+
+    attending_doctor_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("hospitalstaff.staff_id"),
+        nullable=False,
+    )
+
+    doctor_approval_status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+    )
+
+    doctor_approved_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+
+    request_date: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+        server_default=func.current_timestamp(),
+    )
+
+    required_by: Mapped[datetime] = mapped_column(
+        DateTime,
+        nullable=False,
+    )
+
+    priority: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+    )
+
