@@ -74,3 +74,16 @@ def get_blood_group(blood_group_id: int, db: Session = Depends(get_db)):
         return {"error": "Blood group not found"}
 
     return blood_group
+
+@app.get("/blood-groups/name/{group_name}")
+def get_blood_group_by_name(group_name: str, db: Session = Depends(get_db)):
+    blood_group = (
+        db.query(BloodGroup)
+        .filter(BloodGroup.group_name.ilike(group_name))
+        .first()
+    )
+
+    if blood_group is None:
+        return {"error": "Blood group not found"}
+
+    return blood_group
