@@ -58,7 +58,7 @@ def get_donor(donor_id: int, db: Session = Depends(get_db)):
     )
 
     if donor is None:
-        return {"error": "Donor not found"}
+        raise HTTPException(status_code=404, detail="Donor not found")
 
     return donor
 
