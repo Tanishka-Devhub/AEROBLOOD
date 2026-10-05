@@ -4,7 +4,7 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
-from models import BloodBank, BloodGroup, BloodUnit, Donation, Donor
+from models import BloodBank, BloodGroup, BloodUnit, Donation, Donor, Hospital
 from schemas import (
     BloodBankCreate,
     BloodBankResponse,
@@ -18,6 +18,8 @@ from schemas import (
     DonorCreate,
     DonorResponse,
     DonorUpdate,
+    HospitalCreate,
+    HospitalResponse,
 )
 
 app = FastAPI(title="AERO-BLOOD API")
@@ -568,3 +570,79 @@ def create_blood_bank(
     db.refresh(blood_bank)
 
     return blood_bank
+
+
+@app.get("/hospitals", response_model=list[HospitalResponse])
+def get_hospitals(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    city: str | None = None,
+    status: str | None = None,
+    db: Session = Depends(get_db),
+):
+    query = db.query(Hospital)
+
+    if city is not None:
+        query = query.filter(Hospital.city.ilike(f"%{city}%"))
+
+    if status is not None:
+        query = query.filter(
+            Hospital.status == status.strip().upper()
+        )
+
+    return (
+        query
+        .order_by(Hospital.hospital_id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+@app.get("/hospitals/{hospital_id}", response_model=HospitalResponse)
+def get_hospital(
+    hospital_id: int,
+    db: Session = Depends(get_db),
+):
+    hospital = (
+        db.query(Hospital)
+        .filter(Hospital.hospital_id == hospital_id)
+        .first()
+    )
+
+    if hospital is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Hospital not found",
+        )
+
+    return hospital
+
+
+@app.post("/hospitals", response_model=HospitalResponse, status_code=201)
+def create_hospital(
+    hospital_data: HospitalCreate,
+    db: Session = Depends(get_db),
+):
+    if hospital_data.phone is not None:
+        existing_phone = (
+            db.query(Hospital)
+            .filter(Hospital.phone == hospital_data.phone)
+            .first()
+        )
+        if existing_phone is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="Hospital with this phone already exists",
+            )
+
+    hospital_dict = hospital_data.model_dump()
+    hospital_dict["status"] = hospital_data.status.value
+
+    hospital = Hospital(**hospital_dict)
+
+    db.add(hospital)
+    db.commit()
+    db.refresh(hospital)
+
+    return hospital

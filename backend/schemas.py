@@ -186,3 +186,36 @@ class BloodBankCreate(BaseModel):
         if isinstance(v, str):
             return v.strip().upper()
         return v
+
+
+class HospitalStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+
+
+class HospitalResponse(BaseModel):
+    hospital_id: int
+    name: str
+    address: str
+    city: str
+    phone: str | None = None
+    latitude: Decimal | None = None
+    longitude: Decimal | None = None
+    status: HospitalStatus
+
+
+class HospitalCreate(BaseModel):
+    name: str
+    address: str
+    city: str
+    phone: str | None = None
+    latitude: Decimal | None = None
+    longitude: Decimal | None = None
+    status: HospitalStatus = HospitalStatus.ACTIVE
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalize_status(cls, v: str | HospitalStatus) -> str | HospitalStatus:
+        if isinstance(v, str):
+            return v.strip().upper()
+        return v

@@ -197,3 +197,49 @@ class BloodUnit(Base):
     created_at: Mapped[datetime] = mapped_column(
         nullable=False,
     )
+
+
+class Hospital(Base):
+    __tablename__ = "hospital"
+
+    hospital_id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+
+    name: Mapped[str] = mapped_column(
+        String(150),
+        nullable=False,
+    )
+
+    address: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+
+    city: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+
+    phone: Mapped[str | None] = mapped_column(
+        String(20),
+        nullable=True,
+        unique=True,
+    )
+
+    latitude: Mapped[Decimal | None] = mapped_column(
+        Numeric(9, 6),
+        nullable=True,
+    )
+
+    longitude: Mapped[Decimal | None] = mapped_column(
+        Numeric(9, 6),
+        nullable=True,
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+    )
