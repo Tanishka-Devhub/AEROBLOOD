@@ -2,7 +2,7 @@
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import Donor
+from models import BloodGroup, Donor
 
 app = FastAPI(title="AERO-BLOOD API")
 
@@ -57,3 +57,7 @@ def get_donor(donor_id: int, db: Session = Depends(get_db)):
         return {"error": "Donor not found"}
 
     return donor
+
+@app.get("/blood-groups")
+def get_blood_groups(db: Session = Depends(get_db)):
+    return db.query(BloodGroup).order_by(BloodGroup.blood_group_id).all()
