@@ -9,6 +9,7 @@ from models import (
     BloodBank,
     BloodGroup,
     BloodRequest,
+    BloodTransfer,
     BloodUnit,
     Donation,
     Donor,
@@ -23,6 +24,8 @@ from schemas import (
     BloodGroupResponse,
     BloodRequestCreate,
     BloodRequestResponse,
+    BloodTransferCreate,
+    BloodTransferResponse,
     BloodUnitCreate,
     BloodUnitResponse,
     BloodUnitStatusUpdate,
@@ -1041,4 +1044,129 @@ def create_allocation(
 
     return allocation
 
-
+
+@app.get("/blood-transfers", response_model=list[BloodTransferResponse])
+def get_blood_transfers(
+    unit_id: int | None = None,
+    source_blood_bank_id: int | None = None,
+    destination_blood_bank_id: int | None = None,
+    approved_by_staff_id: int | None = None,
+    status: str | None = None,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = db.query(BloodTransfer)
+
+    if unit_id is not None:
+        query = query.filter(BloodTransfer.unit_id == unit_id)
+
+    if source_blood_bank_id is not None:
+        query = query.filter(
+            BloodTransfer.source_blood_bank_id == source_blood_bank_id
+        )
+
+    if destination_blood_bank_id is not None:
+        query = query.filter(
+            BloodTransfer.destination_blood_bank_id == destination_blood_bank_id
+        )
+
+    if approved_by_staff_id is not None:
+        query = query.filter(
+            BloodTransfer.approved_by_staff_id == approved_by_staff_id
+        )
+
+    if status is not None:
+        query = query.filter(
+            BloodTransfer.status == status.strip().upper()
+        )
+
+    return (
+        query
+        .order_by(BloodTransfer.transfer_id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+@app.get("/blood-transfers/{transfer_id}", response_model=BloodTransferResponse)
+def get_blood_transfer(
+    transfer_id: int,
+    db: Session = Depends(get_db),
+):
+    transfer = (
+        db.query(BloodTransfer)
+        .filter(BloodTransfer.transfer_id == transfer_id)
+        .first()
+    )
+
+    if transfer is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Blood transfer not found",
+        )
+
+    return transfer
+
+
+@app.post("/blood-transfers", response_model=BloodTransferResponse, status_code=201)
+def create_blood_transfer(
+    transfer_data: BloodTransferCreate,
+    db: Session = Depends(get_db),
+):
+    blood_unit = (
+        db.query(BloodUnit)
+        .filter(BloodUnit.unit_id == transfer_data.unit_id)
+        .first()
+    )
+    if blood_unit is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Blood unit not found",
+        )
+
+    source_bank = (
+        db.query(BloodBank)
+        .filter(BloodBank.blood_bank_id == transfer_data.source_blood_bank_id)
+        .first()
+    )
+    if source_bank is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Source blood bank not found",
+        )
+
+    dest_bank = (
+        db.query(BloodBank)
+        .filter(BloodBank.blood_bank_id == transfer_data.destination_blood_bank_id)
+        .first()
+    )
+    if dest_bank is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Destination blood bank not found",
+        )
+
+    if transfer_data.approved_by_staff_id is not None:
+        staff = (
+            db.query(HospitalStaff)
+            .filter(HospitalStaff.staff_id == transfer_data.approved_by_staff_id)
+            .first()
+        )
+        if staff is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Hospital staff not found",
+            )
+
+    transfer_dict = transfer_data.model_dump()
+    transfer_dict["status"] = transfer_data.status.value
+
+    transfer = BloodTransfer(**transfer_dict)
+
+    db.add(transfer)
+    db.commit()
+    db.refresh(transfer)
+
+    return transfer

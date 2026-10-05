@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 class BloodGroupResponse(BaseModel):
     blood_group_id: int
@@ -393,4 +393,54 @@ class AllocationCreate(BaseModel):
             return v.strip().upper()
         return v
 
-
+
+class BloodTransferStatus(StrEnum):
+    REQUESTED = "REQUESTED"
+    APPROVED = "APPROVED"
+    IN_TRANSIT = "IN_TRANSIT"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
+
+class BloodTransferResponse(BaseModel):
+    transfer_id: int
+    unit_id: int
+    source_blood_bank_id: int
+    destination_blood_bank_id: int
+    transfer_date: datetime
+    reason: str
+    approved_by_staff_id: int | None = None
+    status: BloodTransferStatus
+
+
+class BloodTransferCreate(BaseModel):
+    unit_id: int
+    source_blood_bank_id: int
+    destination_blood_bank_id: int
+    reason: str
+    approved_by_staff_id: int | None = None
+    status: BloodTransferStatus = BloodTransferStatus.REQUESTED
+
+    @field_validator("reason")
+    @classmethod
+    def validate_reason(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("reason must not be blank")
+        return v.strip()
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalize_status(
+        cls, v: str | BloodTransferStatus
+    ) -> str | BloodTransferStatus:
+        if isinstance(v, str):
+            return v.strip().upper()
+        return v
+
+    @model_validator(mode="after")
+    def validate_different_blood_banks(self) -> "BloodTransferCreate":
+        if self.source_blood_bank_id == self.destination_blood_bank_id:
+            raise ValueError(
+                "source_blood_bank_id and destination_blood_bank_id must be different"
+            )
+        return self
