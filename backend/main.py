@@ -7,6 +7,7 @@ from database import get_db
 from models import (
     Allocation,
     BloodBank,
+    BloodCompatibility,
     BloodGroup,
     BloodRequest,
     BloodTransfer,
@@ -21,6 +22,8 @@ from schemas import (
     AllocationResponse,
     BloodBankCreate,
     BloodBankResponse,
+    BloodCompatibilityCreate,
+    BloodCompatibilityResponse,
     BloodGroupResponse,
     BloodRequestCreate,
     BloodRequestResponse,
@@ -1170,3 +1173,115 @@ def create_blood_transfer(
     db.refresh(transfer)
 
     return transfer
+
+
+@app.get("/blood-compatibility", response_model=list[BloodCompatibilityResponse])
+def get_blood_compatibilities(
+    donor_blood_group_id: int | None = None,
+    recipient_blood_group_id: int | None = None,
+    is_compatible: bool | None = None,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = db.query(BloodCompatibility)
+
+    if donor_blood_group_id is not None:
+        query = query.filter(
+            BloodCompatibility.donor_blood_group_id == donor_blood_group_id
+        )
+
+    if recipient_blood_group_id is not None:
+        query = query.filter(
+            BloodCompatibility.recipient_blood_group_id == recipient_blood_group_id
+        )
+
+    if is_compatible is not None:
+        query = query.filter(
+            BloodCompatibility.is_compatible == is_compatible
+        )
+
+    return (
+        query
+        .order_by(BloodCompatibility.compatibility_id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+@app.get(
+    "/blood-compatibility/{compatibility_id}",
+    response_model=BloodCompatibilityResponse,
+)
+def get_blood_compatibility(
+    compatibility_id: int,
+    db: Session = Depends(get_db),
+):
+    compatibility = (
+        db.query(BloodCompatibility)
+        .filter(BloodCompatibility.compatibility_id == compatibility_id)
+        .first()
+    )
+
+    if compatibility is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Blood compatibility not found",
+        )
+
+    return compatibility
+
+
+@app.post(
+    "/blood-compatibility",
+    response_model=BloodCompatibilityResponse,
+    status_code=201,
+)
+def create_blood_compatibility(
+    compatibility_data: BloodCompatibilityCreate,
+    db: Session = Depends(get_db),
+):
+    donor_group = (
+        db.query(BloodGroup)
+        .filter(BloodGroup.blood_group_id == compatibility_data.donor_blood_group_id)
+        .first()
+    )
+    if donor_group is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Blood group not found",
+        )
+
+    recipient_group = (
+        db.query(BloodGroup)
+        .filter(BloodGroup.blood_group_id == compatibility_data.recipient_blood_group_id)
+        .first()
+    )
+    if recipient_group is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Blood group not found",
+        )
+
+    existing_pair = (
+        db.query(BloodCompatibility)
+        .filter(
+            BloodCompatibility.donor_blood_group_id == compatibility_data.donor_blood_group_id,
+            BloodCompatibility.recipient_blood_group_id == compatibility_data.recipient_blood_group_id,
+        )
+        .first()
+    )
+    if existing_pair is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="Blood compatibility for this donor and recipient pair already exists",
+        )
+
+    compatibility = BloodCompatibility(**compatibility_data.model_dump())
+
+    db.add(compatibility)
+    db.commit()
+    db.refresh(compatibility)
+
+    return compatibility

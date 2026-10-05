@@ -444,3 +444,16 @@ class BloodTransferCreate(BaseModel):
                 "source_blood_bank_id and destination_blood_bank_id must be different"
             )
         return self
+
+
+class BloodCompatibilityResponse(BaseModel):
+    compatibility_id: int
+    donor_blood_group_id: int
+    recipient_blood_group_id: int
+    is_compatible: bool
+
+
+class BloodCompatibilityCreate(BaseModel):
+    donor_blood_group_id: int
+    recipient_blood_group_id: int
+    is_compatible: bool

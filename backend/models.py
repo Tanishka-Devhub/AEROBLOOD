@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, Numeric, String, func
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, Numeric, String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
@@ -459,5 +459,32 @@ class BloodTransfer(Base):
 
     status: Mapped[str] = mapped_column(
         String(20),
+        nullable=False,
+    )
+
+
+class BloodCompatibility(Base):
+    __tablename__ = "bloodcompatibility"
+
+    compatibility_id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
+
+    donor_blood_group_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("bloodgroup.blood_group_id"),
+        nullable=False,
+    )
+
+    recipient_blood_group_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("bloodgroup.blood_group_id"),
+        nullable=False,
+    )
+
+    is_compatible: Mapped[bool] = mapped_column(
+        Boolean,
         nullable=False,
     )
