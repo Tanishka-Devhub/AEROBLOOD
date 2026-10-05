@@ -51,7 +51,12 @@ def get_donors(
 
 @app.get("/donors/{donor_id}")
 def get_donor(donor_id: int, db: Session = Depends(get_db)):
-    donor = db.query(Donor).filter(Donor.donor_id == donor_id).first()
+    donor = (
+        db.query(Donor)
+        .options(joinedload(Donor.blood_group))
+        .filter(Donor.donor_id == donor_id)
+        .first()
+    )
 
     if donor is None:
         return {"error": "Donor not found"}
