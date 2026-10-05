@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
 from models import BloodGroup, Donor
-from schemas import BloodGroupResponse, DonorCreate, DonorResponse
+from schemas import BloodGroupResponse, DonorCreate, DonorResponse, DonorUpdate
 
 app = FastAPI(title="AERO-BLOOD API")
 
@@ -90,6 +90,51 @@ def create_donor(
         db.query(Donor)
         .options(joinedload(Donor.blood_group))
         .filter(Donor.donor_id == donor.donor_id)
+        .first()
+    )
+
+    return donor
+
+@app.put("/donors/{donor_id}", response_model=DonorResponse)
+def update_donor(
+    donor_id: int,
+    donor_data: DonorUpdate,
+    db: Session = Depends(get_db),
+):
+    donor = (
+        db.query(Donor)
+        .filter(Donor.donor_id == donor_id)
+        .first()
+    )
+
+    if donor is None:
+        raise HTTPException(status_code=404, detail="Donor not found")
+
+    if donor_data.blood_group_id is not None:
+        blood_group = (
+            db.query(BloodGroup)
+            .filter(BloodGroup.blood_group_id == donor_data.blood_group_id)
+            .first()
+        )
+
+        if blood_group is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid blood group ID",
+            )
+
+    update_data = donor_data.model_dump(exclude_unset=True)
+
+    for field, value in update_data.items():
+        setattr(donor, field, value)
+
+    db.commit()
+    db.refresh(donor)
+
+    donor = (
+        db.query(Donor)
+        .options(joinedload(Donor.blood_group))
+        .filter(Donor.donor_id == donor_id)
         .first()
     )
 
