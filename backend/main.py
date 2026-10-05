@@ -140,6 +140,28 @@ def update_donor(
 
     return donor
 
+@app.delete("/donors/{donor_id}")
+def delete_donor(
+    donor_id: int,
+    db: Session = Depends(get_db),
+):
+    donor = (
+        db.query(Donor)
+        .filter(Donor.donor_id == donor_id)
+        .first()
+    )
+
+    if donor is None:
+        raise HTTPException(status_code=404, detail="Donor not found")
+
+    db.delete(donor)
+    db.commit()
+
+    return {
+        "message": "Donor deleted successfully",
+        "donor_id": donor_id,
+    }
+
 @app.get("/blood-groups", response_model=list[BloodGroupResponse])
 def get_blood_groups(db: Session = Depends(get_db)):
     return db.query(BloodGroup).order_by(BloodGroup.blood_group_id).all()
