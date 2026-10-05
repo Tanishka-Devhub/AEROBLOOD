@@ -54,6 +54,11 @@ def root():
     }
 
 
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
+
+
 @app.get("/db-test")
 def database_test():
     db = next(get_db())
@@ -86,7 +91,13 @@ def get_donors(
     if name is not None:
         query = query.filter(Donor.full_name.ilike(f"%{name}%"))
 
-    return query.offset(offset).limit(limit).all()
+    return (
+        query
+        .order_by(Donor.donor_id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
 
 @app.get("/donors/{donor_id}", response_model=DonorResponse)
 def get_donor(donor_id: int, db: Session = Depends(get_db)):
