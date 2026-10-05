@@ -1,9 +1,9 @@
-﻿from fastapi import Depends, FastAPI, Query
+﻿from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
 from models import BloodGroup, Donor
-
+from schemas import BloodGroupResponse, DonorResponse
 app = FastAPI(title="AERO-BLOOD API")
 
 
@@ -26,8 +26,7 @@ def database_test():
     finally:
         db.close()
 
-
-@app.get("/donors")
+@app.get("/donors", response_model=list[DonorResponse])
 def get_donors(
     limit: int = Query(50, ge=1, le=100),
     offset: int = Query(0, ge=0),
@@ -49,7 +48,7 @@ def get_donors(
 
     return query.offset(offset).limit(limit).all()
 
-@app.get("/donors/{donor_id}")
+@app.get("/donors/{donor_id}", response_model=DonorResponse)
 def get_donor(donor_id: int, db: Session = Depends(get_db)):
     donor = (
         db.query(Donor)
@@ -63,11 +62,11 @@ def get_donor(donor_id: int, db: Session = Depends(get_db)):
 
     return donor
 
-@app.get("/blood-groups")
+@app.get("/blood-groups", response_model=list[BloodGroupResponse])
 def get_blood_groups(db: Session = Depends(get_db)):
     return db.query(BloodGroup).order_by(BloodGroup.blood_group_id).all()
 
-@app.get("/blood-groups/{blood_group_id}")
+@app.get("/blood-groups/{blood_group_id}", response_model=BloodGroupResponse)
 def get_blood_group(blood_group_id: int, db: Session = Depends(get_db)):
     blood_group = (
         db.query(BloodGroup)
@@ -76,7 +75,7 @@ def get_blood_group(blood_group_id: int, db: Session = Depends(get_db)):
     )
 
     if blood_group is None:
-        return {"error": "Blood group not found"}
+        raise HTTPException(status_code=404, detail="Blood group not found")
 
     return blood_group
 
