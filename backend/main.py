@@ -61,3 +61,16 @@ def get_donor(donor_id: int, db: Session = Depends(get_db)):
 @app.get("/blood-groups")
 def get_blood_groups(db: Session = Depends(get_db)):
     return db.query(BloodGroup).order_by(BloodGroup.blood_group_id).all()
+
+@app.get("/blood-groups/{blood_group_id}")
+def get_blood_group(blood_group_id: int, db: Session = Depends(get_db)):
+    blood_group = (
+        db.query(BloodGroup)
+        .filter(BloodGroup.blood_group_id == blood_group_id)
+        .first()
+    )
+
+    if blood_group is None:
+        return {"error": "Blood group not found"}
+
+    return blood_group
