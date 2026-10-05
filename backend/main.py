@@ -1,14 +1,20 @@
-﻿from datetime import datetime
+from datetime import datetime
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
-from models import BloodGroup, BloodUnit, Donor
+from models import BloodBank, BloodGroup, BloodUnit, Donation, Donor
 from schemas import (
+    BloodBankCreate,
+    BloodBankResponse,
     BloodGroupResponse,
     BloodUnitCreate,
     BloodUnitResponse,
+    BloodUnitStatusUpdate,
+    DonationCreate,
+    DonationResponse,
+    DonationUpdate,
     DonorCreate,
     DonorResponse,
     DonorUpdate,
@@ -347,8 +353,11 @@ def create_blood_unit(
             detail="Expiry date cannot be before collection date",
         )
 
+    unit_data = blood_unit_data.model_dump()
+    unit_data["status"] = blood_unit_data.status.value
+
     blood_unit = BloodUnit(
-        **blood_unit_data.model_dump(),
+        **unit_data,
         created_at=datetime.now(),
     )
 
@@ -357,3 +366,205 @@ def create_blood_unit(
     db.refresh(blood_unit)
 
     return blood_unit
+
+@app.patch("/blood-units/{unit_id}/status", response_model=BloodUnitResponse)
+def update_blood_unit_status(
+    unit_id: int,
+    status_data: BloodUnitStatusUpdate,
+    db: Session = Depends(get_db),
+):
+    blood_unit = (
+        db.query(BloodUnit)
+        .filter(BloodUnit.unit_id == unit_id)
+        .first()
+    )
+
+    if blood_unit is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Blood unit not found",
+        )
+
+    blood_unit.status = status_data.status.value
+
+    db.commit()
+    db.refresh(blood_unit)
+
+    return blood_unit
+
+
+@app.get("/donations", response_model=list[DonationResponse])
+def get_donations(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    donor_id: int | None = None,
+    blood_bank_id: int | None = None,
+    blood_group_id: int | None = None,
+    eligibility_status: str | None = None,
+    screening_status: str | None = None,
+    db: Session = Depends(get_db),
+):
+    query = db.query(Donation)
+
+    if donor_id is not None:
+        query = query.filter(Donation.donor_id == donor_id)
+
+    if blood_bank_id is not None:
+        query = query.filter(Donation.blood_bank_id == blood_bank_id)
+
+    if blood_group_id is not None:
+        query = query.filter(Donation.blood_group_id == blood_group_id)
+
+    if eligibility_status is not None:
+        query = query.filter(
+            Donation.eligibility_status == eligibility_status.strip().upper()
+        )
+
+    if screening_status is not None:
+        query = query.filter(
+            Donation.screening_status == screening_status.strip().upper()
+        )
+
+    return (
+        query
+        .order_by(Donation.donation_id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+@app.get("/donations/{donation_id}", response_model=DonationResponse)
+def get_donation(
+    donation_id: int,
+    db: Session = Depends(get_db),
+):
+    donation = (
+        db.query(Donation)
+        .filter(Donation.donation_id == donation_id)
+        .first()
+    )
+
+    if donation is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Donation not found",
+        )
+
+    return donation
+
+
+@app.post("/donations", response_model=DonationResponse, status_code=201)
+def create_donation(
+    donation_data: DonationCreate,
+    db: Session = Depends(get_db),
+):
+    donor = (
+        db.query(Donor)
+        .filter(Donor.donor_id == donation_data.donor_id)
+        .first()
+    )
+    if donor is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid donor ID",
+        )
+
+    blood_bank_exists = (
+        db.query(BloodBank)
+        .filter(BloodBank.blood_bank_id == donation_data.blood_bank_id)
+        .first()
+        is not None
+    )
+    if not blood_bank_exists:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid blood bank ID",
+        )
+
+    blood_group = (
+        db.query(BloodGroup)
+        .filter(BloodGroup.blood_group_id == donation_data.blood_group_id)
+        .first()
+    )
+    if blood_group is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid blood group ID",
+        )
+
+    donation_dict = donation_data.model_dump()
+    donation_dict["eligibility_status"] = donation_data.eligibility_status.value
+    donation_dict["screening_status"] = donation_data.screening_status.value
+
+    donation = Donation(**donation_dict)
+
+    db.add(donation)
+    db.commit()
+    db.refresh(donation)
+
+    return donation
+
+
+@app.get("/blood-banks", response_model=list[BloodBankResponse])
+def get_blood_banks(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    city: str | None = None,
+    status: str | None = None,
+    db: Session = Depends(get_db),
+):
+    query = db.query(BloodBank)
+
+    if city is not None:
+        query = query.filter(BloodBank.city.ilike(f"%{city}%"))
+
+    if status is not None:
+        query = query.filter(
+            BloodBank.status == status.strip().upper()
+        )
+
+    return (
+        query
+        .order_by(BloodBank.blood_bank_id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+
+@app.get("/blood-banks/{blood_bank_id}", response_model=BloodBankResponse)
+def get_blood_bank(
+    blood_bank_id: int,
+    db: Session = Depends(get_db),
+):
+    blood_bank = (
+        db.query(BloodBank)
+        .filter(BloodBank.blood_bank_id == blood_bank_id)
+        .first()
+    )
+
+    if blood_bank is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Blood bank not found",
+        )
+
+    return blood_bank
+
+
+@app.post("/blood-banks", response_model=BloodBankResponse, status_code=201)
+def create_blood_bank(
+    blood_bank_data: BloodBankCreate,
+    db: Session = Depends(get_db),
+):
+    bank_dict = blood_bank_data.model_dump()
+    bank_dict["status"] = blood_bank_data.status.value
+
+    blood_bank = BloodBank(**bank_dict)
+
+    db.add(blood_bank)
+    db.commit()
+    db.refresh(blood_bank)
+
+    return blood_bank
