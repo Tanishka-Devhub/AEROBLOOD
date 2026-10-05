@@ -133,7 +133,10 @@ def update_donor(
     )
 
     if donor is None:
-        raise HTTPException(status_code=404, detail="Donor not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Donor not found",
+        )
 
     if donor_data.blood_group_id is not None:
         blood_group = (
@@ -146,6 +149,38 @@ def update_donor(
             raise HTTPException(
                 status_code=400,
                 detail="Invalid blood group ID",
+            )
+
+    if donor_data.phone is not None and donor_data.phone != donor.phone:
+        existing_phone = (
+            db.query(Donor)
+            .filter(
+                Donor.phone == donor_data.phone,
+                Donor.donor_id != donor_id,
+            )
+            .first()
+        )
+
+        if existing_phone is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="Phone number already exists",
+            )
+
+    if donor_data.email is not None and donor_data.email != donor.email:
+        existing_email = (
+            db.query(Donor)
+            .filter(
+                Donor.email == donor_data.email,
+                Donor.donor_id != donor_id,
+            )
+            .first()
+        )
+
+        if existing_email is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="Email already exists",
             )
 
     update_data = donor_data.model_dump(exclude_unset=True)
