@@ -19,3 +19,14 @@ class DonorResponse(BaseModel):
     registration_date: date
     status: str
     blood_group: BloodGroupResponse
+
+class DonorCreate(BaseModel):
+    full_name: str
+    date_of_birth: date
+    gender: str
+    blood_group_id: int
+    phone: str
+    email: str | None = None
+    address: str | None = None
+    registration_date: date
+    status: str

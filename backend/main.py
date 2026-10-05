@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
 from models import BloodGroup, Donor
-from schemas import BloodGroupResponse, DonorResponse
+from schemas import BloodGroupResponse, DonorCreate, DonorResponse
+
 app = FastAPI(title="AERO-BLOOD API")
 
 
@@ -59,6 +60,38 @@ def get_donor(donor_id: int, db: Session = Depends(get_db)):
 
     if donor is None:
         raise HTTPException(status_code=404, detail="Donor not found")
+
+    return donor
+
+@app.post("/donors", response_model=DonorResponse, status_code=201)
+def create_donor(
+    donor_data: DonorCreate,
+    db: Session = Depends(get_db),
+):
+    blood_group = (
+        db.query(BloodGroup)
+        .filter(BloodGroup.blood_group_id == donor_data.blood_group_id)
+        .first()
+    )
+
+    if blood_group is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid blood group ID",
+        )
+
+    donor = Donor(**donor_data.model_dump())
+
+    db.add(donor)
+    db.commit()
+    db.refresh(donor)
+
+    donor = (
+        db.query(Donor)
+        .options(joinedload(Donor.blood_group))
+        .filter(Donor.donor_id == donor.donor_id)
+        .first()
+    )
 
     return donor
 
