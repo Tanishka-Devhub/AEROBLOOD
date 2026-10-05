@@ -1,4 +1,4 @@
-﻿from fastapi import Depends, FastAPI
+﻿from fastapi import Depends, FastAPI, Query
 from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
@@ -29,8 +29,8 @@ def database_test():
 
 @app.get("/donors")
 def get_donors(
-    limit: int = 50,
-    offset: int = 0,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     blood_group_id: int | None = None,
     status: str | None = None,
     name: str | None = None,
