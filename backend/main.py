@@ -80,6 +80,31 @@ def create_donor(
             detail="Invalid blood group ID",
         )
 
+    existing_phone = (
+        db.query(Donor)
+        .filter(Donor.phone == donor_data.phone)
+        .first()
+    )
+
+    if existing_phone is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="Phone number already exists",
+        )
+
+    if donor_data.email is not None:
+        existing_email = (
+            db.query(Donor)
+            .filter(Donor.email == donor_data.email)
+            .first()
+        )
+
+        if existing_email is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="Email already exists",
+            )
+
     donor = Donor(**donor_data.model_dump())
 
     db.add(donor)
