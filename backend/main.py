@@ -1,9 +1,18 @@
-﻿from fastapi import Depends, FastAPI, HTTPException, Query
+﻿from datetime import datetime
+
+from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
-from models import BloodGroup, Donor
-from schemas import BloodGroupResponse, DonorCreate, DonorResponse, DonorUpdate
+from models import BloodGroup, BloodUnit, Donor
+from schemas import (
+    BloodGroupResponse,
+    BloodUnitCreate,
+    BloodUnitResponse,
+    DonorCreate,
+    DonorResponse,
+    DonorUpdate,
+)
 
 app = FastAPI(title="AERO-BLOOD API")
 
@@ -251,3 +260,100 @@ def get_blood_group_by_name(group_name: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Blood group not found")
 
     return blood_group
+
+@app.get("/blood-units", response_model=list[BloodUnitResponse])
+def get_blood_units(
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    status: str | None = None,
+    blood_bank_id: int | None = None,
+    db: Session = Depends(get_db),
+):
+    query = db.query(BloodUnit)
+
+    if status is not None:
+        query = query.filter(BloodUnit.status == status)
+
+    if blood_bank_id is not None:
+        query = query.filter(BloodUnit.blood_bank_id == blood_bank_id)
+
+    return (
+        query
+        .order_by(BloodUnit.unit_id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+@app.get("/blood-units/{unit_id}", response_model=BloodUnitResponse)
+def get_blood_unit(
+    unit_id: int,
+    db: Session = Depends(get_db),
+):
+    blood_unit = (
+        db.query(BloodUnit)
+        .filter(BloodUnit.unit_id == unit_id)
+        .first()
+    )
+
+    if blood_unit is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Blood unit not found",
+        )
+
+    return blood_unit
+
+@app.post("/blood-units", response_model=BloodUnitResponse, status_code=201)
+def create_blood_unit(
+    blood_unit_data: BloodUnitCreate,
+    db: Session = Depends(get_db),
+):
+    donation_exists = (
+        db.execute(
+            __import__("sqlalchemy").text(
+                "SELECT 1 FROM donation WHERE donation_id = :donation_id"
+            ),
+            {"donation_id": blood_unit_data.donation_id},
+        ).scalar()
+        is not None
+    )
+
+    if not donation_exists:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid donation ID",
+        )
+
+    blood_bank_exists = (
+        db.execute(
+            __import__("sqlalchemy").text(
+                "SELECT 1 FROM bloodbank WHERE blood_bank_id = :blood_bank_id"
+            ),
+            {"blood_bank_id": blood_unit_data.blood_bank_id},
+        ).scalar()
+        is not None
+    )
+
+    if not blood_bank_exists:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid blood bank ID",
+        )
+
+    if blood_unit_data.expiry_date < blood_unit_data.collection_date:
+        raise HTTPException(
+            status_code=400,
+            detail="Expiry date cannot be before collection date",
+        )
+
+    blood_unit = BloodUnit(
+        **blood_unit_data.model_dump(),
+        created_at=datetime.now(),
+    )
+
+    db.add(blood_unit)
+    db.commit()
+    db.refresh(blood_unit)
+
+    return blood_unit

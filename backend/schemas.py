@@ -41,3 +41,18 @@ class DonorUpdate(BaseModel):
     address: str | None = None
     registration_date: date | None = None
     status: str | None = None
+
+class BloodUnitResponse(BaseModel):
+    unit_id: int
+    donation_id: int
+    blood_bank_id: int
+    collection_date: date
+    expiry_date: date
+    status: str
+
+class BloodUnitCreate(BaseModel):
+    donation_id: int
+    blood_bank_id: int
+    collection_date: date
+    expiry_date: date
+    status: str
