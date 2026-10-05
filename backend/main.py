@@ -1,5 +1,5 @@
 ﻿from fastapi import Depends, FastAPI
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from database import get_db
 from models import BloodGroup, Donor
@@ -36,7 +36,7 @@ def get_donors(
     name: str | None = None,
     db: Session = Depends(get_db),
 ):
-    query = db.query(Donor)
+    query = db.query(Donor).options(joinedload(Donor.blood_group))
 
     if blood_group_id is not None:
         query = query.filter(Donor.blood_group_id == blood_group_id)
