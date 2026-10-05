@@ -88,6 +88,6 @@ def get_blood_group_by_name(group_name: str, db: Session = Depends(get_db)):
     )
 
     if blood_group is None:
-        return {"error": "Blood group not found"}
+        raise HTTPException(status_code=404, detail="Blood group not found")
 
     return blood_group
