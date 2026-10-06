@@ -52,11 +52,14 @@ from schemas import (
     ShortageSurplusResponse,
     RedistributionPreviewRequest,
     RedistributionPreviewResponse,
+    DonorRankingPreviewRequest,
+    DonorRankingPreviewResponse,
 )
 from services.allocation_engine import AllocationEngine
 from services.expiry_engine import ExpiryEngine
 from services.shortage_surplus_engine import ShortageSurplusEngine
 from services.redistribution_engine import RedistributionEngine
+from services.donor_ranking_engine import DonorRankingEngine
 
 
 app = FastAPI(title="AERO-BLOOD API")
@@ -1397,4 +1400,19 @@ def preview_redistribution(
         max_transfers=preview_data.max_transfers,
         speed_kmph=preview_data.speed_kmph,
         expiry_margin_days=preview_data.expiry_margin_days,
+    )
+
+
+@app.post(
+    "/donor-ranking-engine/preview",
+    response_model=DonorRankingPreviewResponse,
+)
+def preview_donor_ranking(
+    preview_data: DonorRankingPreviewRequest,
+    db: Session = Depends(get_db),
+):
+    engine = DonorRankingEngine(db)
+    return engine.rank_donors(
+        request_id=preview_data.request_id,
+        top_n=preview_data.top_n,
     )

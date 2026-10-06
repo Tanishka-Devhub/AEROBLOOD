@@ -689,3 +689,45 @@ class RedistributionPreviewResponse(BaseModel):
     unmet_shortages: list[UnmetShortageResponse]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DonorRecommendationItem(BaseModel):
+    rank: int
+    donor_id: int
+    blood_group: str
+    match_type: str
+    match_score: float
+    days_since_last_donation: int | None = None
+    recency_score: float
+    distance_km: float | None = None
+    estimated_arrival_minutes: int | None = None
+    response_time_score: float
+    final_score: float
+    recommendation_reason: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DonorRankingPreviewRequest(BaseModel):
+    request_id: int
+    top_n: int = Field(default=10, ge=1, le=100)
+
+    @field_validator("top_n")
+    @classmethod
+    def validate_top_n(cls, v: int) -> int:
+        if v < 1 or v > 100:
+            raise ValueError("top_n must be between 1 and 100")
+        return v
+
+
+class DonorRankingPreviewResponse(BaseModel):
+    request_id: int
+    hospital_id: int
+    hospital_name: str
+    required_blood_group: str
+    priority: str
+    donors_found: int
+    recommendations: list[DonorRecommendationItem]
+    message: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
