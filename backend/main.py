@@ -48,9 +48,13 @@ from schemas import (
     ExpiryPreviewResponse,
     ExpiryQuarantineRequest,
     ExpiryQuarantineResponse,
+    ShortageSurplusPreviewRequest,
+    ShortageSurplusResponse,
 )
 from services.allocation_engine import AllocationEngine
 from services.expiry_engine import ExpiryEngine
+from services.shortage_surplus_engine import ShortageSurplusEngine
+
 
 app = FastAPI(title="AERO-BLOOD API")
 
@@ -1359,3 +1363,17 @@ def quarantine_expired_units(
         "units_changed": result.units_changed,
         "changed_unit_ids": result.changed_unit_ids,
     }
+
+
+@app.post(
+    "/shortage-surplus-engine/preview",
+    response_model=ShortageSurplusResponse,
+)
+def preview_shortage_surplus(
+    preview_data: ShortageSurplusPreviewRequest,
+    db: Session = Depends(get_db),
+):
+    engine = ShortageSurplusEngine(db)
+    return engine.detect_for_blood_bank(
+        blood_bank_id=preview_data.blood_bank_id,
+    )

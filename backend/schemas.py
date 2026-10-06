@@ -565,3 +565,45 @@ class ExpiryQuarantineResponse(BaseModel):
     changed_unit_ids: list[int]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class InventoryStatus(StrEnum):
+    SHORTAGE = "SHORTAGE"
+    BALANCED = "BALANCED"
+    SURPLUS = "SURPLUS"
+
+
+class BloodGroupStockReport(BaseModel):
+    blood_group_id: int
+    group_name: str
+    usable_units: int
+    min_threshold: int
+    surplus_threshold: int
+    status: InventoryStatus
+    shortfall: int
+    excess: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ShortageSurplusSummary(BaseModel):
+    total_usable_units: int
+    shortage_groups_count: int
+    balanced_groups_count: int
+    surplus_groups_count: int
+    has_critical_shortage: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ShortageSurplusPreviewRequest(BaseModel):
+    blood_bank_id: int
+
+
+class ShortageSurplusResponse(BaseModel):
+    blood_bank_id: int
+    blood_bank_name: str
+    summary: ShortageSurplusSummary
+    stock_by_group: list[BloodGroupStockReport]
+
+    model_config = ConfigDict(from_attributes=True)
