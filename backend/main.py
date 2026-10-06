@@ -50,10 +50,13 @@ from schemas import (
     ExpiryQuarantineResponse,
     ShortageSurplusPreviewRequest,
     ShortageSurplusResponse,
+    RedistributionPreviewRequest,
+    RedistributionPreviewResponse,
 )
 from services.allocation_engine import AllocationEngine
 from services.expiry_engine import ExpiryEngine
 from services.shortage_surplus_engine import ShortageSurplusEngine
+from services.redistribution_engine import RedistributionEngine
 
 
 app = FastAPI(title="AERO-BLOOD API")
@@ -1376,4 +1379,22 @@ def preview_shortage_surplus(
     engine = ShortageSurplusEngine(db)
     return engine.detect_for_blood_bank(
         blood_bank_id=preview_data.blood_bank_id,
+    )
+
+
+@app.post(
+    "/redistribution-engine/preview",
+    response_model=RedistributionPreviewResponse,
+)
+def preview_redistribution(
+    preview_data: RedistributionPreviewRequest,
+    db: Session = Depends(get_db),
+):
+    engine = RedistributionEngine(db)
+    return engine.preview(
+        destination_blood_bank_id=preview_data.destination_blood_bank_id,
+        source_blood_bank_id=preview_data.source_blood_bank_id,
+        max_transfers=preview_data.max_transfers,
+        speed_kmph=preview_data.speed_kmph,
+        expiry_margin_days=preview_data.expiry_margin_days,
     )

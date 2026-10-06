@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 class BloodGroupResponse(BaseModel):
     blood_group_id: int
@@ -605,5 +605,87 @@ class ShortageSurplusResponse(BaseModel):
     blood_bank_name: str
     summary: ShortageSurplusSummary
     stock_by_group: list[BloodGroupStockReport]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RedistributionReason(StrEnum):
+    EXPIRING_SOON = "EXPIRING_SOON"
+    SURPLUS = "SURPLUS"
+
+
+class ProposedTransferResponse(BaseModel):
+    unit_id: int
+    donor_blood_group: str
+    recipient_blood_group: str
+    source_blood_bank_id: int
+    source_blood_bank_name: str
+    destination_blood_bank_id: int
+    destination_blood_bank_name: str
+    distance_km: float
+    arrival_date: date
+    estimated_arrival_date: date
+    expiry_date: date
+    days_until_expiry: int
+    reason: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UnmetShortageResponse(BaseModel):
+    destination_blood_bank_id: int
+    destination_blood_bank_name: str
+    blood_group_name: str
+    remaining_shortfall: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RedistributionPreviewRequest(BaseModel):
+    destination_blood_bank_id: int
+    source_blood_bank_id: int | None = None
+    max_transfers: int = Field(default=50, ge=1, le=200)
+    speed_kmph: float = Field(default=40.0, ge=5.0, le=150.0)
+    expiry_margin_days: int = Field(default=1, ge=0, le=14)
+
+    @field_validator("max_transfers")
+    @classmethod
+    def validate_max_transfers(cls, v: int) -> int:
+        if v < 1 or v > 200:
+            raise ValueError("max_transfers must be between 1 and 200")
+        return v
+
+    @field_validator("speed_kmph")
+    @classmethod
+    def validate_speed(cls, v: float) -> float:
+        if v < 5.0 or v > 150.0:
+            raise ValueError("speed_kmph must be between 5.0 and 150.0")
+        return v
+
+    @field_validator("expiry_margin_days")
+    @classmethod
+    def validate_expiry_margin(cls, v: int) -> int:
+        if v < 0 or v > 14:
+            raise ValueError("expiry_margin_days must be between 0 and 14")
+        return v
+
+    @model_validator(mode="after")
+    def validate_different_blood_banks(self) -> "RedistributionPreviewRequest":
+        if (
+            self.source_blood_bank_id is not None
+            and self.source_blood_bank_id == self.destination_blood_bank_id
+        ):
+            raise ValueError(
+                "source_blood_bank_id and destination_blood_bank_id must be different"
+            )
+        return self
+
+
+class RedistributionPreviewResponse(BaseModel):
+    total_transfers_recommended: int
+    total_units_transferred: int
+    unmet_shortages_count: int
+    transfers: list[ProposedTransferResponse]
+    unmet_shortages: list[UnmetShortageResponse]
 
     model_config = ConfigDict(from_attributes=True)
