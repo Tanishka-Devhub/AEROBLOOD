@@ -19,6 +19,8 @@ from models import (
 )
 from schemas import (
     AllocationCreate,
+    AllocationPreviewRequest,
+    AllocationPreviewResponse,
     AllocationResponse,
     BloodBankCreate,
     BloodBankResponse,
@@ -43,6 +45,7 @@ from schemas import (
     HospitalStaffCreate,
     HospitalStaffResponse,
 )
+from services.allocation_engine import AllocationEngine
 
 app = FastAPI(title="AERO-BLOOD API")
 
@@ -1296,3 +1299,17 @@ def create_blood_compatibility(
     db.refresh(compatibility)
 
     return compatibility
+
+
+@app.post(
+    "/allocation-engine/preview",
+    response_model=AllocationPreviewResponse,
+)
+def preview_allocation(
+    preview_data: AllocationPreviewRequest,
+    db: Session = Depends(get_db),
+):
+    engine = AllocationEngine(db)
+    return engine.find_candidates(
+        request_id=preview_data.request_id,
+    )

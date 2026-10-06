@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 class BloodGroupResponse(BaseModel):
     blood_group_id: int
@@ -457,3 +457,38 @@ class BloodCompatibilityCreate(BaseModel):
     donor_blood_group_id: int
     recipient_blood_group_id: int
     is_compatible: bool
+
+
+class AllocationDecisionStatus(StrEnum):
+    FULLY_ALLOCATABLE = "FULLY_ALLOCATABLE"
+    PARTIALLY_ALLOCATABLE = "PARTIALLY_ALLOCATABLE"
+    NOT_ALLOCATABLE = "NOT_ALLOCATABLE"
+
+
+class AllocationCandidateResponse(BaseModel):
+    unit_id: int
+    donation_id: int
+    blood_bank_id: int
+    donor_blood_group_id: int
+    collection_date: date
+    expiry_date: date
+    status: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AllocationPreviewRequest(BaseModel):
+    request_id: int
+
+
+class AllocationPreviewResponse(BaseModel):
+    request_id: int
+    recipient_blood_group_id: int
+    quantity_required: int
+    quantity_allocated: int
+    allocation_status: AllocationDecisionStatus
+    is_fully_allocatable: bool
+    selected_unit_ids: list[int]
+    candidates: list[AllocationCandidateResponse]
+
+    model_config = ConfigDict(from_attributes=True)
