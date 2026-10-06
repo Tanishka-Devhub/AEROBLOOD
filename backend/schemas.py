@@ -492,3 +492,76 @@ class AllocationPreviewResponse(BaseModel):
     candidates: list[AllocationCandidateResponse]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ExpiryStatus(StrEnum):
+    EXPIRED = "EXPIRED"
+    CRITICAL = "CRITICAL"
+    EXPIRING_SOON = "EXPIRING_SOON"
+
+
+class ExpiringUnitResponse(BaseModel):
+    unit_id: int
+    donation_id: int
+    blood_bank_id: int
+    collection_date: date
+    expiry_date: date
+    current_status: str
+    expiry_status: ExpiryStatus
+    days_left: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ExpiryCategoryCounts(BaseModel):
+    expired: int
+    critical: int
+    expiring_soon: int
+    total_flagged: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ExpiryPreviewRequest(BaseModel):
+    warning_days: int = 3
+    critical_days: int = 1
+
+    @field_validator("warning_days")
+    @classmethod
+    def validate_warning_days(cls, v: int) -> int:
+        if v < 0:
+            raise ValueError("warning_days must be greater than or equal to 0")
+        return v
+
+    @field_validator("critical_days")
+    @classmethod
+    def validate_critical_days(cls, v: int) -> int:
+        if v < 0:
+            raise ValueError("critical_days must be greater than or equal to 0")
+        return v
+
+    @model_validator(mode="after")
+    def validate_thresholds(self) -> "ExpiryPreviewRequest":
+        if self.critical_days > self.warning_days:
+            raise ValueError("critical_days cannot be greater than warning_days")
+        return self
+
+
+class ExpiryPreviewResponse(BaseModel):
+    warning_days: int
+    critical_days: int
+    counts: ExpiryCategoryCounts
+    flagged_units: list[ExpiringUnitResponse]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ExpiryQuarantineRequest(BaseModel):
+    unit_ids: list[int] | None = None
+
+
+class ExpiryQuarantineResponse(BaseModel):
+    units_changed: int
+    changed_unit_ids: list[int]
+
+    model_config = ConfigDict(from_attributes=True)

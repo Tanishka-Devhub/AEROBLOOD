@@ -44,8 +44,13 @@ from schemas import (
     HospitalResponse,
     HospitalStaffCreate,
     HospitalStaffResponse,
+    ExpiryPreviewRequest,
+    ExpiryPreviewResponse,
+    ExpiryQuarantineRequest,
+    ExpiryQuarantineResponse,
 )
 from services.allocation_engine import AllocationEngine
+from services.expiry_engine import ExpiryEngine
 
 app = FastAPI(title="AERO-BLOOD API")
 
@@ -1313,3 +1318,44 @@ def preview_allocation(
     return engine.find_candidates(
         request_id=preview_data.request_id,
     )
+
+
+@app.post(
+    "/expiry-engine/preview",
+    response_model=ExpiryPreviewResponse,
+)
+def preview_expiring_units(
+    preview_data: ExpiryPreviewRequest | None = None,
+    db: Session = Depends(get_db),
+):
+    req = preview_data or ExpiryPreviewRequest()
+    engine = ExpiryEngine(db)
+    result = engine.find_expiring_units(
+        warning_days=req.warning_days,
+        critical_days=req.critical_days,
+    )
+    return {
+        "warning_days": req.warning_days,
+        "critical_days": req.critical_days,
+        "counts": result.counts,
+        "flagged_units": result.flagged_units,
+    }
+
+
+@app.post(
+    "/expiry-engine/quarantine",
+    response_model=ExpiryQuarantineResponse,
+)
+def quarantine_expired_units(
+    quarantine_data: ExpiryQuarantineRequest | None = None,
+    db: Session = Depends(get_db),
+):
+    target_ids = quarantine_data.unit_ids if quarantine_data else None
+    engine = ExpiryEngine(db)
+    result = engine.quarantine_expired_units(
+        unit_ids=target_ids,
+    )
+    return {
+        "units_changed": result.units_changed,
+        "changed_unit_ids": result.changed_unit_ids,
+    }
