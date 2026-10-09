@@ -1,0 +1,315 @@
+@import "tailwindcss" source(none);
+@import "tw-animate-css";
+@source "../src";
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: .5rem;
+  --background: oklch(.205 .053 15);
+  --foreground: oklch(.925 .031 20);
+  --card: oklch(.245 .06 16);
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(.53 .185 22);
+  --primary-foreground: oklch(.96 .022 18);
+  --secondary: oklch(.225 .051 16);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(.30 .066 18);
+  --muted-foreground: oklch(.72 .048 18);
+  --accent: oklch(.33 .092 19);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(.62 .195 23);
+  --destructive-foreground: var(--foreground);
+  --border: oklch(.37 .069 18);
+  --input: var(--border);
+  --ring: oklch(.75 .126 17);
+  --blood-light: oklch(.73 .143 17);
+  --clinical: oklch(.78 .066 155);
+  --chart-1: var(--primary);
+  --chart-2: var(--blood-light);
+  --chart-3: var(--clinical);
+  --chart-4: var(--muted-foreground);
+  --chart-5: var(--foreground);
+  --sidebar: var(--secondary);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --hero-shade: linear-gradient(90deg, var(--background) 0%, color-mix(in oklch, var(--background) 92%, transparent) 30%, transparent 72%);
+  --hero-bottom: linear-gradient(0deg, var(--background), transparent 70%);
+  --shadow-clinical: 0 8px 24px color-mix(in oklch, var(--primary) 15%, transparent);
+  --packet-label: oklch(.88 .044 22);
+  --packet-ink: oklch(.28 .078 18);
+  --packet-fill: oklch(.35 .12 20);
+  --font-display: 'Anton', sans-serif;
+  --font-body: 'Public Sans', sans-serif;
+  --font-clinical: 'Azeret Mono', monospace;
+  --font-editorial: 'Zilla Slab', serif;
+  --specimen-shadow: 6px 6px 0 color-mix(in oklch, var(--background) 45%, transparent);
+}
+@theme inline {
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-clinical);
+  --font-display: var(--font-display);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-blood-light: var(--blood-light);
+  --color-clinical: var(--clinical);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: .25rem;
+  --radius-md: .375rem;
+  --radius-lg: .5rem;
+  --radius-xl: .5rem;
+}
+@layer base {
+  * { border-color: var(--border); letter-spacing: 0; }
+  html { scroll-behavior: smooth; scroll-padding-top: 24px; }
+  body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-body); }
+  button, a, input, select { -webkit-tap-highlight-color: transparent; }
+  a:focus-visible { outline: 2px solid var(--ring); outline-offset: 5px; }
+  ::selection { background: var(--primary); color: var(--foreground); }
+  h1, h2, h3 { font-family: var(--font-display); }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--background); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+}
+.blood-home { min-height: 100vh; }
+.brand-bar { height: 89px; padding: 0 5%; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.brand-lockup { display: flex; gap: 12px; align-items: center; text-decoration: none; }
+.brand-symbol { width: 40px; height: 43px; background: var(--accent); color: var(--blood-light); display: grid; place-items: center; border: 1px solid var(--border); border-radius: 6px; position: relative; }
+.brand-cross { position: absolute; left: 14px; top: 20px; color: var(--background); }
+.brand-name { font-family: var(--font-display); font-size: 27px; font-weight: 400; line-height: 1.2; display: block; }
+.brand-name > span { color: var(--blood-light); }
+.brand-caption { font-family: var(--font-clinical); color: var(--muted-foreground); font-size: 8px; display: block; margin-top: 5px; }
+.home-nav { display: flex; align-items: center; gap: 23px; font-size: 11px; }
+.home-nav > a { display: flex; align-items: center; gap: 12px; }
+.nav-divider { width: 1px; height: 22px; background: var(--border); }
+.clinical-hero { position: relative; isolation: isolate; min-height: 516px; overflow: hidden; }
+.clinical-image { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 48%; z-index: -3; }
+.clinical-hero::before { content: ''; position: absolute; inset: 0; background: var(--hero-shade); z-index: -2; }
+.clinical-hero::after { content: ''; position: absolute; inset: 0; background: var(--hero-bottom); z-index: -1; }
+.clinical-hero-inner { max-width: 1440px; margin: auto; padding: 45px 5% 35px; }
+.hero-eyebrow { font-family: var(--font-clinical); color: var(--blood-light); font-size: 9px; display: flex; align-items: center; gap: 9px; }
+.signal-mark { height: 6px; width: 6px; background: var(--blood-light); border-radius: 50%; box-shadow: 0 0 0 4px color-mix(in oklch, var(--blood-light) 12%, transparent); }
+.clinical-hero h1 { font-size: 112px; line-height: 1.05; font-weight: 400; margin: 24px 0 13px; }
+.clinical-hero h1 > span { color: var(--blood-light); }
+.clinical-hero h1 > .title-period { color: var(--primary); }
+.hero-tagline { max-width: 510px; font-size: 12px; font-weight: 600; line-height: 1.85; color: var(--foreground); }
+.workflow { display: flex; align-items: center; gap: 18px; color: var(--muted-foreground); margin: 27px 0 30px; font: 10px var(--font-clinical); }
+.workflow span { display: flex; align-items: center; gap: 7px; color: var(--blood-light); }
+.clinical-button { font-size: 11px; min-height: 47px; min-width: 218px; justify-content: space-between; box-shadow: var(--shadow-clinical); }
+.hero-footnote { display: flex; align-items: center; gap: 8px; color: var(--muted-foreground); font: 8px var(--font-clinical); margin-top: 24px; }
+.image-annotation { position: absolute; bottom: 52px; right: 5%; display: flex; align-items: center; gap: 13px; font: 8px/1.7 var(--font-clinical); color: var(--muted-foreground); }
+.annotation-cross { font-size: 26px; color: var(--blood-light); }
+.annotation-line { width: 38px; height: 1px; background: var(--blood-light); }
+.hero-index { position: absolute; right: 5%; top: 27px; font: 9px var(--font-clinical); color: var(--muted-foreground); }
+.network-band { padding: 28px 5%; display: grid; grid-template-columns: 1fr 1fr 1fr; background: var(--secondary); border-block: 1px solid var(--border); }
+.network-stat { display: flex; align-items: center; gap: 15px; padding-left: 27px; border-left: 1px solid var(--border); }
+.network-stat:first-child { padding-left: 0; border-left: 0; }
+.network-stat > svg { color: var(--blood-light); width: 23px; height: 23px; stroke-width: 1.4; flex-shrink: 0; }
+.network-stat strong { font-family: var(--font-display); font-size: 44px; font-weight: 400; display: block; line-height: 1.1; }
+.network-stat strong > span { font-family: var(--font-body); font-size: 10px; font-weight: 500; margin-left: 6px; }
+.network-stat .network-ai { font-family: var(--font-body); font-size: 12px; font-weight: 600; margin-bottom: 9px; }
+.stat-label { color: var(--muted-foreground); font: 8px var(--font-clinical); margin-top: 7px; display: block; }
+.portal-section { max-width: 1440px; margin: auto; padding: 65px 5% 70px; display: grid; grid-template-columns: 220px minmax(0,1fr); gap: 35px; }
+.section-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.section-kicker { font: 8px var(--font-clinical); color: var(--muted-foreground); display: flex; align-items: center; gap: 8px; }
+.section-kicker > span { width: 12px; height: 2px; background: var(--blood-light); }
+.section-heading h2 { font-size: 46px; line-height: 1.1; font-weight: 400; margin: 0; text-wrap: balance; }
+.section-heading h2 > span { color: var(--blood-light); display: block; font: italic 500 36px/1.2 var(--font-editorial); margin-top: 12px; }
+.portal-section .section-heading { display: block; margin: 0; }
+.portal-section .section-number { display: block; margin-top: 28px; }
+.clinical-seal { display: flex; align-items: center; gap: 12px; margin-top: 32px; color: var(--blood-light); font: 8px/1.8 var(--font-clinical); }
+.pulse-divider { display: flex; align-items: center; gap: 25px; padding: 8px 5%; border-top: 1px solid var(--border); color: var(--blood-light); font: 8px var(--font-clinical); }
+.pulse-divider svg { height: 35px; flex: 1; min-width: 0; overflow: visible; }
+.pulse-divider path { fill: none; stroke: currentColor; stroke-width: 1; vector-effect: non-scaling-stroke; stroke-dasharray: 1400; animation: pulse-trace 5s ease-in-out infinite; }
+@keyframes pulse-trace { 0% { stroke-dashoffset: 1400; opacity: .35; } 60%,100% { stroke-dashoffset: 0; opacity: 1; } }
+.packet-rack { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 24px; border-top: 2px solid var(--border); padding-top: 40px; }
+.packet-portal { display: flex; flex-direction: column; align-items: center; position: relative; text-decoration: none; min-width: 0; transition: transform .25s; }
+.packet-portal:hover { transform: translateY(-6px); }
+.packet-hanger { position: absolute; bottom: calc(100% - 2px); height: 42px; width: 1px; background: var(--muted-foreground); }
+.packet-body { width: 100%; background: var(--packet-fill); border: 1px solid var(--blood-light); border-radius: 32px 32px 24px 24px; padding: 19px 12px 15px; position: relative; box-shadow: inset 0 0 0 5px color-mix(in oklch,var(--blood-light) 12%,transparent); }
+.packet-body::before { content: ''; width: 28px; height: 5px; border: 1px solid var(--blood-light); border-radius: 4px; position: absolute; top: 7px; left: calc(50% - 14px); }
+.packet-top { display: flex; align-items: center; justify-content: space-between; color: var(--blood-light); padding: 4px 4px 14px; font: 8px var(--font-clinical); }
+.packet-label { background: var(--packet-label); color: var(--packet-ink); padding: 16px 13px 10px; min-height: 257px; display: flex; flex-direction: column; }
+.packet-label-caption { font: 7px/1.5 var(--font-clinical); text-transform: uppercase; }
+.packet-label h3 { font-size: 28px; line-height: 1.2; margin: 13px 0 10px; font-weight: 400; }
+.packet-label p { font-size: 10px; line-height: 1.8; flex: 1; margin-bottom: 18px; }
+.packet-barcode { height: 23px; width: 100%; background: repeating-linear-gradient(90deg,var(--packet-ink) 0 1px,transparent 1px 3px,var(--packet-ink) 3px 5px,transparent 5px 8px,var(--packet-ink) 8px 9px,transparent 9px 13px); }
+.packet-label-bottom { display: flex; justify-content: space-between; align-items: center; font: 7px var(--font-clinical); margin-top: 8px; }
+.packet-action { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 17px 3px 0; font-size: 9px; min-height: 40px; }
+.packet-action svg { flex-shrink: 0; color: var(--blood-light); }
+.packet-outlet { height: 20px; width: 22px; border-inline: 5px double var(--blood-light); border-bottom: 1px solid var(--blood-light); }
+.section-number { color: var(--muted-foreground); font: 10px var(--font-clinical); }
+.portal-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 19px; }
+.portal-card { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: 6px; background: var(--card); padding: 23px; transition: border-color .2s, transform .2s, background .2s; }
+.portal-card:hover { border-color: var(--blood-light); background: var(--accent); transform: translateY(-3px); }
+.portal-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 21px; }
+.portal-icon { color: var(--blood-light); height: 42px; width: 42px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 5px; background: var(--accent); }
+.portal-number { font: 10px var(--font-clinical); color: var(--muted-foreground); }
+.portal-card h3 { font-size: 26px; font-weight: 600; line-height: 1; }
+.portal-label { font: 9px var(--font-clinical); color: var(--blood-light); margin-top: 9px; text-transform: uppercase; }
+.portal-card p { color: var(--muted-foreground); font-size: 11px; line-height: 1.9; margin: 17px 0 23px; flex-grow: 1; }
+.portal-action { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 17px; font-size: 10px; font-weight: 600; }
+.portal-action svg { color: var(--blood-light); }
+.home-footer { border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 23px 5%; gap: 20px; font-size: 9px; color: var(--muted-foreground); }
+.footer-brand { display: flex; gap: 7px; align-items: center; color: var(--foreground); font-weight: 600; }
+.footer-brand > svg { color: var(--blood-light); }
+.footer-brand > span { color: var(--muted-foreground); font-weight: 400; margin-left: 2px; }
+.footer-workflow { font: 8px var(--font-clinical); color: var(--foreground); }
+.footer-workflow > span { color: var(--blood-light); margin-inline: 5px; }
+.portal-header h1 { font-family: var(--font-display); font-size: 32px; font-weight: 400; }
+.portal-shell input, .portal-shell select, .portal-shell textarea { color-scheme: dark; }
+.hero-editorial { font: italic 500 34px/1.15 var(--font-editorial); margin: 0 0 22px; }
+.hero-editorial > span { color: var(--blood-light); }
+.specimen-stamp { position: absolute; right: 9%; top: 80px; width: 150px; padding: 14px; background: var(--packet-label); color: var(--packet-ink); border: 1px solid var(--packet-ink); outline: 4px solid var(--packet-label); transform: rotate(8deg); box-shadow: var(--specimen-shadow); display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.specimen-stamp > span { font: 7px var(--font-clinical); }
+.specimen-stamp strong { font: 400 30px/1.05 var(--font-display); }
+.blood-type-strip { display: flex; align-items: center; gap: 30px; padding: 19px 5%; background: var(--packet-label); color: var(--packet-ink); border-block: 1px solid var(--blood-light); }
+.blood-strip-label { display: flex; align-items: center; gap: 12px; font: 9px/1.6 var(--font-clinical); flex-shrink: 0; }
+.blood-type-strip > div { flex: 1; display: grid; grid-template-columns: repeat(8,minmax(0,1fr)); gap: 12px; align-items: center; }
+.blood-type { font: 400 30px/1 var(--font-display); text-align: center; }
+.blood-strip-cross { flex-shrink: 0; }
+.packet-portal:nth-child(2) .packet-body { background: var(--accent); }
+.packet-portal:nth-child(3) .packet-body { background: var(--primary); }
+.packet-portal:hover .packet-action svg { transform: translateX(4px); }
+.packet-action svg { transition: transform .2s; }
+.response-sequence { display: grid; grid-template-columns: 1.3fr repeat(3,1fr); padding: 35px 5% 45px; gap: 30px; background: var(--secondary); border-top: 1px solid var(--border); }
+.sequence-title > svg { color: var(--blood-light); margin-bottom: 14px; }
+.sequence-title h2 { font-size: 31px; font-weight: 400; line-height: 1.15; }
+.sequence-title h2 span { font: italic 500 30px/1.2 var(--font-editorial); color: var(--blood-light); }
+.sequence-step { position: relative; padding: 10px 0 0 25px; border-left: 1px solid var(--border); }
+.sequence-number { display: block; font: 9px var(--font-clinical); color: var(--muted-foreground); margin-bottom: 24px; }
+.sequence-step > svg { color: var(--blood-light); position: absolute; right: 0; top: 6px; }
+.sequence-step h3 { font-size: 30px; font-weight: 400; margin-bottom: 7px; }
+.sequence-step p { font-size: 11px; color: var(--muted-foreground); }
+@media(min-width:1500px) { .clinical-hero-inner { padding-left: 72px; } .clinical-hero { min-height: 580px; } }
+@media(max-width:900px) {
+  .portal-section { grid-template-columns: 1fr; }
+  .portal-section .section-heading { display: flex; }
+  .section-heading h2 { font-size: 40px; max-width: 570px; }
+  .clinical-seal { display: none; }
+  .home-nav > a, .nav-divider { display: none; }
+  .clinical-hero h1 { font-size: 88px; }
+  .specimen-stamp { right: 6%; top: 110px; width: 125px; }
+  .specimen-stamp strong { font-size: 25px; }
+  .blood-type-strip { gap: 18px; }
+  .blood-type { font-size: 24px; }
+  .blood-strip-cross { display: none; }
+  .response-sequence { gap: 18px; }
+  .clinical-hero { min-height: 490px; }
+  .network-stat { padding-left: 16px; gap: 9px; }
+  .network-stat strong > span { display: block; margin: 5px 0 0; }
+  .portal-card { padding: 18px; }
+  .home-footer { flex-wrap: wrap; }
+}
+@media(max-width:640px) {
+  .brand-bar { height: 79px; padding-inline: 20px; }
+  .brand-name { font-size: 23px; }
+  .brand-caption { font-size: 7px; }
+  .home-nav { gap: 0; }
+  .home-nav > div { font-size: 9px; gap: 4px; padding: 5px 7px; }
+  .home-nav > div > svg, .home-nav > div > span:first-of-type { display: none; }
+  .clinical-hero { min-height: 565px; }
+  .clinical-image { object-position: 72% center; opacity: .65; }
+  .clinical-hero::before { background: linear-gradient(90deg,var(--background),color-mix(in oklch,var(--background) 55%,transparent)); }
+  .clinical-hero-inner { padding: 38px 22px 140px; }
+  .hero-eyebrow { font-size: 7px; }
+  .clinical-hero h1 { font-size: 60px; margin-top: 26px; }
+  .hero-editorial { font-size: 27px; margin-bottom: 20px; }
+  .specimen-stamp { top: auto; bottom: 30px; right: 26px; width: 94px; padding: 8px; gap: 6px; }
+  .specimen-stamp strong { font-size: 20px; }
+  .specimen-stamp > span { font-size: 5px; }
+  .specimen-stamp > svg { width: 18px; height: 18px; }
+  .blood-type-strip { padding: 18px 22px; gap: 15px; align-items: flex-start; }
+  .blood-strip-label { font-size: 7px; gap: 7px; padding-top: 4px; }
+  .blood-type-strip > div { grid-template-columns: repeat(4,minmax(0,1fr)); gap: 14px 10px; }
+  .blood-type { font-size: 23px; }
+  .response-sequence { grid-template-columns: repeat(3,minmax(0,1fr)); padding: 28px 22px; gap: 22px 14px; }
+  .sequence-title { grid-column: 1/-1; display: flex; align-items: center; gap: 15px; }
+  .sequence-title > svg { margin: 0; }
+  .sequence-title h2 br { display: none; }
+  .sequence-title h2 { font-size: 26px; }
+  .sequence-title h2 span { font-size: 26px; }
+  .sequence-step { padding-left: 10px; }
+  .sequence-step > svg { width: 18px; }
+  .sequence-step h3 { font-size: 23px; }
+  .sequence-step p { font-size: 10px; line-height: 1.6; }
+  .hero-tagline { font-size: 10px; max-width: 305px; line-height: 1.9; }
+  .workflow { gap: 12px; font-size: 9px; margin: 27px 0; }
+  .workflow span { gap: 5px; }
+  .workflow svg { width: 14px; }
+  .hero-footnote { margin-top: 23px; }
+  .hero-index { top: auto; bottom: 22px; right: auto; left: 22px; }
+  .image-annotation { right: auto; left: 22px; bottom: 55px; }
+  .network-band { padding: 20px 22px; grid-template-columns: 1fr 1fr; gap: 22px 12px; }
+  .network-stat { padding-left: 14px; gap: 10px; }
+  .network-stat strong { font-size: 29px; }
+  .network-stat strong > span { font-size: 9px; }
+  .network-stat > svg { width: 21px; }
+  .network-stat:last-child { grid-column: 1/-1; border: 0; padding: 17px 0 0; border-top: 1px solid var(--border); }
+  .network-stat .network-ai { margin-bottom: 0; font-size: 11px; }
+  .stat-label { font-size: 7px; }
+  .portal-section { padding: 36px 22px 48px; gap: 34px; }
+  .packet-rack { grid-template-columns: 1fr; gap: 44px; padding: 34px 20px 0; }
+  .packet-portal:not(:first-child) .packet-hanger { height: 26px; }
+  .packet-label { min-height: 228px; padding: 20px; }
+  .packet-label h3 { font-size: 32px; }
+  .packet-label p { font-size: 12px; }
+  .packet-action { font-size: 11px; padding-inline: 10px; }
+  .section-heading h2 { font-size: 36px; max-width: 250px; }
+  .section-heading h2 > span { font-size: 30px; }
+  .section-number { font-size: 8px; align-self: flex-start; margin-top: 3px; }
+  .section-kicker { font-size: 7px; }
+  .portal-grid { grid-template-columns: 1fr; gap: 15px; }
+  .portal-card { padding: 22px; }
+  .portal-card p { font-size: 12px; }
+  .portal-action { font-size: 11px; }
+  .home-footer { padding: 22px; gap: 14px; font-size: 8px; }
+  .footer-workflow { width: 100%; }
+  .portal-shell { flex-direction: column; height: 100dvh; }
+  .portal-sidebar { width: 100%; min-height: 0; max-height: 215px; border-right: 0; border-bottom: 1px solid var(--border); }
+  .portal-sidebar > div:first-child { padding: 12px 18px; }
+  .portal-sidebar > div:nth-child(2) { display: flex; gap: 20px; overflow: auto; padding: 12px 18px; }
+  .portal-sidebar > div:nth-child(2) > div { min-width: 185px; }
+  .portal-sidebar > div:last-child { display: none; }
+  .portal-header { padding: 15px 18px; }
+  .portal-header > div { min-width: 0; max-width: 100%; flex-wrap: wrap; }
+  .portal-header h1 { font-size: 26px; overflow-wrap: anywhere; }
+  .portal-shell main { padding: 18px; }
+  .portal-shell button { white-space: normal; height: auto; min-height: 36px; }
+}
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
