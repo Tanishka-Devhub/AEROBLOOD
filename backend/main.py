@@ -1,4 +1,5 @@
 from datetime import datetime
+from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
@@ -63,6 +64,17 @@ from services.donor_ranking_engine import DonorRankingEngine
 
 
 app = FastAPI(title="AERO-BLOOD API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5176",
+        "http://127.0.0.1:5176",
+        "http://10.251.101.56:5176",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
